@@ -43,7 +43,9 @@ import java.util.List;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener {
+        LocationListener,
+        GoogleMap.OnMarkerClickListener,
+        GoogleMap.OnMarkerDragListener{
 
     private GoogleMap mMap;
     private ActivityMapsBinding binding;
@@ -54,6 +56,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     // contstants
     private final int REQUEST_LOCATION_CODE = 99;
+
+    // variables
+    double latitude, longitude;
+    double end_latitude, end_longitude;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,6 +95,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
            buildGoogleApiClient();
            mMap.setMyLocationEnabled(true);
        }
+
+       mMap.setOnMarkerDragListener(this);
+       mMap.setOnMarkerClickListener(this);
 
     }
 
@@ -127,6 +136,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
             }
         }
+
+        if (view.getId() == R.id.B_To){
+
+            mMap.clear();
+            MarkerOptions markerOptions = new MarkerOptions();
+            markerOptions.position(new LatLng(end_latitude, end_longitude));
+            markerOptions.title("Destination");
+            markerOptions.draggable(true);
+
+            float results[] = new float[10];
+
+            Location.distanceBetween(latitude, longitude, end_latitude, end_longitude, results);
+
+            markerOptions.snippet("Distance = "+(results[0]/1000));
+            mMap.addMarker(markerOptions);
+        }
     }
 
 
@@ -138,6 +163,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (currentLocationMarker != null){
             currentLocationMarker.remove();
         }
+        // lat and long values
+        latitude = location.getLatitude();
+        longitude = location.getLongitude();
 
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
         MarkerOptions markerOptions = new MarkerOptions();
@@ -177,7 +205,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     // permission is denied
                     Toast.makeText(this, "Permission denied.", Toast.LENGTH_SHORT).show();
                 }
-                return;
+
+                break;
+
+
         }
     }
 
@@ -195,6 +226,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
     public boolean checkLocationPermissions(){
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)){
@@ -209,8 +245,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             return true;
     }
 
+
+
     @Override
-    public void onConnectionSuspended(int i) {
+    public boolean onMarkerClick(Marker marker) {
+        marker.setDraggable(true);
+        return false;
+    }
+
+    @Override
+    public void onMarkerDragStart(Marker marker) {
+
+    }
+
+    @Override
+    public void onMarkerDrag(Marker marker) {
+
+    }
+
+    @Override
+    public void onMarkerDragEnd(Marker marker) {
+        end_latitude = marker.getPosition().latitude;
+        end_longitude = marker.getPosition().longitude;
 
     }
 
