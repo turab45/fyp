@@ -40,12 +40,14 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import java.io.IOException;
 import java.util.List;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener,
-        GoogleMap.OnMarkerClickListener,
-        GoogleMap.OnMarkerDragListener{
+        LocationListener{
 
     private GoogleMap mMap;
     private ActivityMapsBinding binding;
@@ -94,10 +96,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
            buildGoogleApiClient();
            mMap.setMyLocationEnabled(true);
+           mMap.setTrafficEnabled(true);
        }
 
-       mMap.setOnMarkerDragListener(this);
-       mMap.setOnMarkerClickListener(this);
 
     }
 
@@ -131,27 +132,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Address address = addressList.get(i);
                 LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
                 mo.position(latLng);
-                mo.title("Search result");
+                mo.title("Destination");
+
+                // get distance
+                float[] results = new float[10];
+                Location.distanceBetween(latitude, longitude,address.getLatitude(), address.getLongitude(), results);
+                mo.snippet("Distance = "+(results[0]/1000.0));
+
                 mMap.addMarker(mo);
                 mMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
             }
         }
 
-        if (view.getId() == R.id.B_To){
 
-            mMap.clear();
-            MarkerOptions markerOptions = new MarkerOptions();
-            markerOptions.position(new LatLng(end_latitude, end_longitude));
-            markerOptions.title("Destination");
-            markerOptions.draggable(true);
-
-            float results[] = new float[10];
-
-            Location.distanceBetween(latitude, longitude, end_latitude, end_longitude, results);
-
-            markerOptions.snippet("Distance = "+(results[0]/1000));
-            mMap.addMarker(markerOptions);
-        }
     }
 
 
@@ -246,32 +239,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-
-    @Override
-    public boolean onMarkerClick(Marker marker) {
-        marker.setDraggable(true);
-        return false;
-    }
-
-    @Override
-    public void onMarkerDragStart(Marker marker) {
-
-    }
-
-    @Override
-    public void onMarkerDrag(Marker marker) {
-
-    }
-
-    @Override
-    public void onMarkerDragEnd(Marker marker) {
-        end_latitude = marker.getPosition().latitude;
-        end_longitude = marker.getPosition().longitude;
-
-    }
-
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
+    }
+
+    public void tryDistanceMatrixApi(){
+        OkHttpClient client = new OkHttpClient().newBuilder()
+                .build();
+        Request request = new Request.Builder()
+                .url("https://maps.googleapis.com/maps/api/distancematrix/json?origins=40.6655101%2C-73.89188969999998&destinations=40.659569%2C-73.933783%7C40.729029%2C-73.851524%7C40.6860072%2C-73.6334271%7C40.598566%2C-73.7527626&key=YOUR_API_KEY")
+                .method("GET", null)
+                .build();
+        try {
+            Response response = client.newCall(request).execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
