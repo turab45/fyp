@@ -96,7 +96,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
            buildGoogleApiClient();
            mMap.setMyLocationEnabled(true);
-           mMap.setTrafficEnabled(true);
        }
 
 
@@ -136,11 +135,34 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 // get distance
                 float[] results = new float[10];
-                Location.distanceBetween(latitude, longitude,address.getLatitude(), address.getLongitude(), results);
+
+                // set end_lat and end_lat values
+                end_latitude = address.getLatitude();
+                end_longitude = address.getLongitude();
+
+
+
+                Location.distanceBetween(latitude, longitude,end_latitude, end_longitude, results);
+
                 mo.snippet("Distance = "+(results[0]/1000.0));
 
                 mMap.addMarker(mo);
                 mMap.animateCamera(CameraUpdateFactory.newLatLng(latLng));
+            }
+        }
+
+        if (view.getId() == R.id.b_distance_duration){
+            if (end_longitude != 0.0 || end_latitude != 0.0){
+                // fetch duration and distance
+                Object[] dataTransfer = new Object[3];
+                String url = getDirectionsUrl();
+                GetDirectionsData getDirectionsData = new GetDirectionsData();
+                dataTransfer[0] = mMap;
+                dataTransfer[1] = url;
+                dataTransfer[2] = new LatLng(end_latitude, end_longitude);
+                getDirectionsData.execute(dataTransfer);
+            }else{
+                Toast.makeText(MapsActivity.this, "Please search a location.", Toast.LENGTH_SHORT);
             }
         }
 
@@ -161,12 +183,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         longitude = location.getLongitude();
 
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-        MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.position(latLng);
-        markerOptions.title("Current location");
-        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
-
-        currentLocationMarker = mMap.addMarker(markerOptions);
 
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         mMap.animateCamera(CameraUpdateFactory.zoomBy(10));
@@ -244,17 +260,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-    public void tryDistanceMatrixApi(){
-        OkHttpClient client = new OkHttpClient().newBuilder()
-                .build();
-        Request request = new Request.Builder()
-                .url("https://maps.googleapis.com/maps/api/distancematrix/json?origins=40.6655101%2C-73.89188969999998&destinations=40.659569%2C-73.933783%7C40.729029%2C-73.851524%7C40.6860072%2C-73.6334271%7C40.598566%2C-73.7527626&key=YOUR_API_KEY")
-                .method("GET", null)
-                .build();
-        try {
-            Response response = client.newCall(request).execute();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public String getDirectionsUrl(){
+        StringBuilder googleDirectionsUrl = new StringBuilder("https://maps.googleapis.com/maps/api/directions/json?");
+        googleDirectionsUrl.append("origin="+latitude+","+longitude);
+        googleDirectionsUrl.append("&destination="+end_latitude+","+end_longitude);
+        googleDirectionsUrl.append("&key="+getString(R.string.google_maps_key));
+
+        return googleDirectionsUrl.toString();
     }
 }

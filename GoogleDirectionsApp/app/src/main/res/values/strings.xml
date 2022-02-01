@@ -3,5 +3,4 @@
     <string name="title_activity_maps">MapsActivity</string>
     <string name="title_activity_driver_map">DriverMapActivity</string>
 
-    <string name="mapbox_access_token">pk.eyJ1IjoidHVyYWI0NSIsImEiOiJja3hpdnB2bXczMG9lMndwZmFxY2F5c3g2In0.JsLZpeDkGPIHqxdeL6yRjg</string>
 </resources>

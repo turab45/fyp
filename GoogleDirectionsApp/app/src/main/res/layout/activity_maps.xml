@@ -36,6 +36,14 @@
             android:onClick="onBtnClick"
             android:text="Search" />
 
+        <Button
+            android:id="@+id/b_distance_duration"
+            android:layout_width="wrap_content"
+            android:layout_height="59dp"
+            android:layout_weight="1"
+            android:onClick="onBtnClick"
+            android:text="Distance and Duration" />
+
     </LinearLayout>
 
 </RelativeLayout>
